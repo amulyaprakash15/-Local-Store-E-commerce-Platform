@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <div class="filter-section">
+        <form method="get" action="{{ url_for('home') }}">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label for="category" class="form-label">Category</label>
+                    <select class="form-select" id="category" name="category" onchange="this.form.submit()">
+                        <option value="all" {% if not request.args.get('category') or request.args.get('category') == 'all' %}selected{% endif %}>All Categories</option>
+                        {% for category in categories %}
+                            <option value="{{ category }}" {% if request.args.get('category') == category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="col-md-4">
+                    <label for="search" class="form-label">Search</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="search" name="search" placeholder="Search products..." value="{{ request.args.get('search', '') }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="col-md-3">
+                    <label for="sort" class="form-label">Sort by</label>
+                    <select class="form-select" id="sort" name="sort" onchange="this.form.submit()">
+                        <option value="name" {% if request.args.get('sort') == 'name' %}selected{% endif %}>Name (A-Z)</option>
+                        <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Price (Low to High)</option>
+                        <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Price (High to Low)</option>
+                        <option value="newest" {% if request.args.get('sort') == 'newest' %}selected{% endif %}>Newest</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">Filter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    {% if products %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+            {% for product in products %}
+                <div class="col">
+                    <div class="card h-100">
+                        {% if product['image'] %}
+                            <div class="card-img-container">
+                                <img src="{{ url_for('static', filename='images/' + product['image']) }}" class="product-image" alt="{{ product['name'] }}">
+                            </div>
+                        {% else %}
+                            <div class="card-img-container">
+                                <i class="bi bi-image no-image-icon"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ product['name'] }}</h5>
+                            <p class="card-text text-muted">{{ product['description'] }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">${{ "%.2f"|format(product['price']) }}</h5>
+                                <span class="badge bg-secondary">{{ product['category'] }}</span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white">
+                            <form method="post" action="{{ url_for('add_to_cart', product_id=product['id']) }}" class="d-flex">
+                                <input type="number" name="quantity" value="1" min="1" max="{{ product['stock'] }}" class="form-control me-2" style="width: 70px;">
+                                <button type="submit" class="btn btn-primary flex-grow-1">
+                                    <i class="bi bi-cart-plus"></i> Add
+                                </button>
+                            </form>
+                            <a href="{{ url_for('product_detail', product_id=product['id']) }}" class="btn btn-outline-primary w-100 mt-2">
+                                View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-exclamation-circle text-muted" style="font-size: 3rem;"></i>
+            <h3 class="mt-3">No products found</h3>
+            <p class="text-muted">Try adjusting your search or filter criteria</p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary mt-2">Reset Filters</a>
+        </div>
+    {% endif %}
+{% endblock %}
